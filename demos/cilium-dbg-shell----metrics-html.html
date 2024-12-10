@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metrics</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        tr { border-bottom: 1px solid #ddd; }
+        th, td { padding: 8px; text-align: left; }
+        tr.clickable:hover { background-color: #f5f5f5; cursor: pointer; }
+        .hidden { display: none; }
+        .search-header {  position: fixed; bottom: 4px; right: 4px; z-index: 99; }
+        .selected { background-color: #e9e9e9; border: 0px; }
+        .ratebox { position: relative; z-index: 99; float: left; }
+    </style>
+</head>
+<body>
+<div class="search-header">
+  <input id="search-input" type="text" placeholder="search name"/>
+</div>
+<table id="metrics-table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Labels</th>
+            <th>Latest</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+
+const samples = [
+
+  {"name":"cilium_act_processing_time_seconds","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_api_process_time_seconds","labels":"method=DELETE path=/v1/endpoint return_code=200","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_api_process_time_seconds","labels":"method=DELETE path=/v1/endpoint return_code=404","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_api_process_time_seconds","labels":"method=GET path=/v1/cluster return_code=200","histogram":{"p50":[0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025],"p90":[0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045],"p99":[0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495]},"latest":"2.5ms / 4.5ms / 4.95ms"},
+
+  {"name":"cilium_agent_api_process_time_seconds","labels":"method=GET path=/v1/config return_code=200","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_api_process_time_seconds","labels":"method=GET path=/v1/healthz return_code=200","histogram":{"p50":[0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025],"p90":[0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045],"p99":[0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495]},"latest":"2.5ms / 4.5ms / 4.95ms"},
+
+  {"name":"cilium_agent_api_process_time_seconds","labels":"method=POST path=/v1/ipam return_code=201","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_api_process_time_seconds","labels":"method=PUT path=/v1/endpoint return_code=201","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_bootstrap_seconds","labels":"outcome=success scope=bpfBase","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_bootstrap_seconds","labels":"outcome=success scope=cleanup","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_bootstrap_seconds","labels":"outcome=success scope=daemonInit","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_bootstrap_seconds","labels":"outcome=success scope=earlyInit","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_bootstrap_seconds","labels":"outcome=success scope=enableConntrack","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_bootstrap_seconds","labels":"outcome=success scope=fqdn","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_bootstrap_seconds","labels":"outcome=success scope=healthCheck","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_bootstrap_seconds","labels":"outcome=success scope=ingressIPAM","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_bootstrap_seconds","labels":"outcome=success scope=ipam","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_bootstrap_seconds","labels":"outcome=success scope=k8sInit","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_bootstrap_seconds","labels":"outcome=success scope=mapsInit","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_bootstrap_seconds","labels":"outcome=success scope=overall","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_agent_bootstrap_seconds","labels":"outcome=success scope=restore","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_api_limiter_adjustment_factor","labels":"api_call=endpoint-create","gaugeOrCounter":{"samples":[19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004,19.989004]},"latest":"19.99"},
+
+  {"name":"cilium_api_limiter_adjustment_factor","labels":"api_call=endpoint-delete","gaugeOrCounter":{"samples":[2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976,2.6581976]},"latest":"2.658"},
+
+  {"name":"cilium_api_limiter_processed_requests_total","labels":"api_call=endpoint-create outcome=success return_code=200","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_api_limiter_processed_requests_total","labels":"api_call=endpoint-delete outcome=fail return_code=404","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_api_limiter_processed_requests_total","labels":"api_call=endpoint-delete outcome=success return_code=200","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_api_limiter_processing_duration_seconds","labels":"api_call=endpoint-create value=estimated","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_api_limiter_processing_duration_seconds","labels":"api_call=endpoint-create value=mean","gaugeOrCounter":{"samples":[0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501,0.10005501]},"latest":"100.1m"},
+
+  {"name":"cilium_api_limiter_processing_duration_seconds","labels":"api_call=endpoint-delete value=estimated","gaugeOrCounter":{"samples":[0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2]},"latest":"200m"},
+
+  {"name":"cilium_api_limiter_processing_duration_seconds","labels":"api_call=endpoint-delete value=mean","gaugeOrCounter":{"samples":[0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895,0.07523895]},"latest":"75.24m"},
+
+  {"name":"cilium_api_limiter_rate_limit","labels":"api_call=endpoint-create value=burst","gaugeOrCounter":{"samples":[42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42,42]},"latest":"42"},
+
+  {"name":"cilium_api_limiter_rate_limit","labels":"api_call=endpoint-create value=limit","gaugeOrCounter":{"samples":[9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502,9.994502]},"latest":"9.995"},
+
+  {"name":"cilium_api_limiter_rate_limit","labels":"api_call=endpoint-delete value=burst","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_api_limiter_rate_limit","labels":"api_call=endpoint-delete value=limit","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_api_limiter_requests_in_flight","labels":"api_call=endpoint-create value=in-flight","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_api_limiter_requests_in_flight","labels":"api_call=endpoint-create value=limit","gaugeOrCounter":{"samples":[41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41,41]},"latest":"41"},
+
+  {"name":"cilium_api_limiter_requests_in_flight","labels":"api_call=endpoint-delete value=in-flight","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_api_limiter_requests_in_flight","labels":"api_call=endpoint-delete value=limit","gaugeOrCounter":{"samples":[7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7]},"latest":"7"},
+
+  {"name":"cilium_api_limiter_wait_duration_seconds","labels":"api_call=endpoint-create value=max","gaugeOrCounter":{"samples":[60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60]},"latest":"60"},
+
+  {"name":"cilium_api_limiter_wait_duration_seconds","labels":"api_call=endpoint-create value=mean","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_api_limiter_wait_duration_seconds","labels":"api_call=endpoint-create value=min","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_api_limiter_wait_duration_seconds","labels":"api_call=endpoint-delete value=max","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_api_limiter_wait_duration_seconds","labels":"api_call=endpoint-delete value=mean","gaugeOrCounter":{"samples":[0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821,0.00003821]},"latest":"38.21µ"},
+
+  {"name":"cilium_api_limiter_wait_duration_seconds","labels":"api_call=endpoint-delete value=min","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_api_limiter_wait_history_duration_seconds","labels":"api_call=endpoint-create","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_api_limiter_wait_history_duration_seconds","labels":"api_call=endpoint-delete","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_auth_map","gaugeOrCounter":{"samples":[524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288,524288]},"latest":"524.3k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_call_policy","gaugeOrCounter":{"samples":[65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535]},"latest":"65.53k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_ct4_global","gaugeOrCounter":{"samples":[144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418]},"latest":"144.4k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_ct_any4_global","gaugeOrCounter":{"samples":[72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209]},"latest":"72.21k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_egresscall_policy","gaugeOrCounter":{"samples":[65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535]},"latest":"65.53k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_events","gaugeOrCounter":{"samples":[8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8]},"latest":"8"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_ipcache","gaugeOrCounter":{"samples":[512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000,512000]},"latest":"512k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_ipv4_frag_datagrams","gaugeOrCounter":{"samples":[8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192,8192]},"latest":"8.192k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_lb4_reverse_sk","gaugeOrCounter":{"samples":[72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209,72209]},"latest":"72.21k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_lxc","gaugeOrCounter":{"samples":[65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535]},"latest":"65.53k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_metrics","gaugeOrCounter":{"samples":[1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024]},"latest":"1.024k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_node_map","gaugeOrCounter":{"samples":[16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384]},"latest":"16.38k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_node_map_v2","gaugeOrCounter":{"samples":[16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384]},"latest":"16.38k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_nodeport_neigh4","gaugeOrCounter":{"samples":[144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418]},"latest":"144.4k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_ratelimit","gaugeOrCounter":{"samples":[1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024,1024]},"latest":"1.024k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_ratelimit_metrics","gaugeOrCounter":{"samples":[64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64,64]},"latest":"64"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_runtime_config","gaugeOrCounter":{"samples":[256,256,256,256,256,256,256,256,256,256,256,256,256,256,256,256,256,256,256,256,256,256,256,256]},"latest":"256"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_signals","gaugeOrCounter":{"samples":[8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8]},"latest":"8"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_skip_lb4","gaugeOrCounter":{"samples":[100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100]},"latest":"100"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=cilium_snat_v4_external","gaugeOrCounter":{"samples":[144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418,144418]},"latest":"144.4k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=default","gaugeOrCounter":{"samples":[65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536,65536]},"latest":"65.54k"},
+
+  {"name":"cilium_bpf_map_capacity","labels":"map_group=endpoint_policy","gaugeOrCounter":{"samples":[16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384]},"latest":"16.38k"},
+
+  {"name":"cilium_bpf_map_ops_total","labels":"map_name=call_policy operation=delete outcome=success","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_bpf_map_ops_total","labels":"map_name=ct4_global operation=delete outcome=success","gaugeOrCounter":{"samples":[142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813,142813]},"latest":"142.8k"},
+
+  {"name":"cilium_bpf_map_ops_total","labels":"map_name=ct_any4_global operation=delete outcome=success","gaugeOrCounter":{"samples":[13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336,13336]},"latest":"13.34k"},
+
+  {"name":"cilium_bpf_map_ops_total","labels":"map_name=egresscall_policy operation=delete outcome=success","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_bpf_map_ops_total","labels":"map_name=ipcache operation=delete outcome=success","gaugeOrCounter":{"samples":[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]},"latest":"10"},
+
+  {"name":"cilium_bpf_map_ops_total","labels":"map_name=ipcache operation=update outcome=success","gaugeOrCounter":{"samples":[48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48]},"latest":"48"},
+
+  {"name":"cilium_bpf_map_ops_total","labels":"map_name=lxc operation=delete outcome=fail","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_bpf_map_ops_total","labels":"map_name=lxc operation=delete outcome=success","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_bpf_map_ops_total","labels":"map_name=lxc operation=update outcome=success","gaugeOrCounter":{"samples":[7406,7396,7381,7371,7356,7346,7331,7321,7306,7296,7281,7271,7256,7246,7231,7221,7206,7196,7181,7171,7156,7146,7131,7121]},"latest":"7.406k"},
+
+  {"name":"cilium_bpf_map_ops_total","labels":"map_name=policy operation=update outcome=success","gaugeOrCounter":{"samples":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6]},"latest":"6"},
+
+  {"name":"cilium_bpf_map_ops_total","labels":"map_name=runtime_config operation=update outcome=success","gaugeOrCounter":{"samples":[165767,165466,165163,164859,164556,164252,163948,163646,163343,163040,162738,162436,162132,161829,161526,161222,160918,160617,160313,160011,159709,159407,159106,158802]},"latest":"165.8k"},
+
+  {"name":"cilium_bpf_map_ops_total","labels":"map_name=snat_v4_external operation=delete outcome=success","gaugeOrCounter":{"samples":[11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282,11282]},"latest":"11.28k"},
+
+  {"name":"cilium_bpf_map_ops_total","labels":"map_name=tunnel_map operation=update outcome=success","gaugeOrCounter":{"samples":[5109,5100,5091,5081,5072,5063,5053,5044,5034,5025,5016,5007,4997,4987,4979,4969,4959,4951,4941,4932,4923,4914,4904,4895]},"latest":"5.109k"},
+
+  {"name":"cilium_bpf_map_pressure","labels":"map_name=ct4_global","gaugeOrCounter":{"samples":[0.03783462,0.03752995,0.037266824,0.036955226,0.036664404,0.036435902,0.03614508,0.03586118,0.03555651,0.035231065,0.034912545,0.03464942,0.03431705,0.03399161,0.03364539,0.033319946,0.03297373,0.032662135,0.032308992,0.032045867,0.031706575,0.031415753,0.031104157,0.030737165]},"latest":"37.83m"},
+
+  {"name":"cilium_bpf_map_pressure","labels":"map_name=ct_any4_global","gaugeOrCounter":{"samples":[0.04075669,0.040396627,0.040022712,0.0396211,0.039233338,0.038859423,0.03848551,0.038083896,0.03769613,0.037156034,0.036837514,0.036518995,0.03610353,0.035729617,0.035369553,0.034926396,0.034607876,0.03423396,0.03390159,0.033541527,0.033126064,0.032738302,0.032350536,0.031935077]},"latest":"40.76m"},
+
+  {"name":"cilium_bpf_map_pressure","labels":"map_name=ipcache","gaugeOrCounter":{"samples":[0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375,0.000068359375]},"latest":"68.36µ"},
+
+  {"name":"cilium_bpf_map_pressure","labels":"map_name=lxc","gaugeOrCounter":{"samples":[0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511,0.00007629511]},"latest":"76.3µ"},
+
+  {"name":"cilium_bpf_map_pressure","labels":"map_name=tunnel_map","gaugeOrCounter":{"samples":[0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367,0.000045776367]},"latest":"45.78µ"},
+
+  {"name":"cilium_cidrgroups_referenced","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_controllers_runs_duration_seconds","labels":"status=success","histogram":{"p50":[0.0026394422,0.002605364,0.0026181103,0.0026593625,0.0026158302,0.0026176472,0.0026078431,0.0026153845,0.0025976563,0.002607422,0.0025957855,0.002607422,0.0026082678,0.0026254826,0.0026284584,0.002607422,0.0025954198,0.0026176472,0.0026078431,0.0026153845,0.0026181103,0.0026176472,0.0025957855,0.002607422],"p90":[0.004750996,0.0046896553,0.0047125984,0.0047868527,0.004708494,0.004711765,0.0046941177,0.004707692,0.0046757814,0.0046933596,0.0046724137,0.0046933596,0.004694882,0.004725869,0.0047312253,0.0046933596,0.0046717557,0.004711765,0.0046941177,0.004707692,0.0047125984,0.004711765,0.0046724137,0.0046933596],"p99":[0.066875,0.0207,0.0151,0.0555,0.01645,0.023325,0.02085,0.01855,0.01835,0.02186875,0.01687,0.0149875,0.01675,0.027333334,0.02302,0.01999,0.0182,0.01999,0.021442857,0.01984,0.01702,0.021421429,0.018225,0.012475]},"latest":"2.639ms / 4.751ms / 66.88ms"},
+
+  {"name":"cilium_controllers_runs_total","labels":"status=success","gaugeOrCounter":{"samples":[153650,153385,153113,152847,152580,152309,152042,151776,151504,151238,150971,150700,150433,150168,149896,149630,149363,149091,148824,148558,148286,148020,147753,147482]},"latest":"153.7k"},
+
+  {"name":"cilium_datapath_conntrack_dump_resets_total","labels":"area=conntrack family=ipv4 name=dump_interrupts","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_datapath_conntrack_gc_duration_seconds","labels":"family=ipv4 protocol=TCP status=completed","histogram":{"p50":[0.075,0.02125,0.025,0.0625,0.025,0.0175,0.025,0.02125,0.075,0.02125,0.0175,0.02125,0.0175,0.02125,0.025,0.04375,0.0175,0.02125,0.025,0.02125,0.0175,0.03125,0.0175,0.02125],"p90":[0.095,0.085,0.09,0.0925,0.09,0.0235,0.09,0.085,0.095,0.085,0.0235,0.085,0.0235,0.085,0.045,0.085,0.0235,0.0425,0.045,0.0425,0.0235,0.04625,0.0235,0.0425],"p99":[0.0995,0.0985,0.099,0.09925,0.099,0.02485,0.099,0.0985,0.0995,0.0985,0.02485,0.0985,0.02485,0.0985,0.0495,0.0985,0.02485,0.04925,0.0495,0.04925,0.02485,0.049625,0.02485,0.04925]},"latest":"75ms / 95ms / 99.5ms"},
+
+  {"name":"cilium_datapath_conntrack_gc_duration_seconds","labels":"family=ipv4 protocol=non-TCP status=completed","histogram":{"p50":[0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075,0.0075],"p90":[0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095,0.0095],"p99":[0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995,0.00995]},"latest":"7.5ms / 9.5ms / 9.95ms"},
+
+  {"name":"cilium_datapath_conntrack_gc_entries","labels":"family=ipv4 protocol=TCP status=alive","gaugeOrCounter":{"samples":[5451,5417,5366,5333,5282,5259,5214,5173,5120,5085,5027,4999,4941,4905,4846,4808,4753,4713,4654,4622,4569,4534,4477,4433]},"latest":"5.451k"},
+
+  {"name":"cilium_datapath_conntrack_gc_entries","labels":"family=ipv4 protocol=TCP status=deleted","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_datapath_conntrack_gc_entries","labels":"family=ipv4 protocol=non-TCP status=alive","gaugeOrCounter":{"samples":[2934,2913,2881,2857,2823,2802,2770,2747,2705,2682,2652,2633,2599,2576,2543,2520,2492,2469,2441,2419,2381,2360,2327,2304]},"latest":"2.934k"},
+
+  {"name":"cilium_datapath_conntrack_gc_entries","labels":"family=ipv4 protocol=non-TCP status=deleted","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_datapath_conntrack_gc_key_fallbacks_total","labels":"family=ipv4 protocol=TCP","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_datapath_conntrack_gc_key_fallbacks_total","labels":"family=ipv4 protocol=non-TCP","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_datapath_conntrack_gc_runs_total","labels":"family=ipv4 protocol=TCP status=completed","gaugeOrCounter":{"samples":[1397,1395,1392,1390,1387,1385,1382,1380,1377,1375,1372,1370,1367,1365,1362,1360,1357,1355,1352,1350,1347,1345,1342,1340]},"latest":"1.397k"},
+
+  {"name":"cilium_datapath_conntrack_gc_runs_total","labels":"family=ipv4 protocol=non-TCP status=completed","gaugeOrCounter":{"samples":[1397,1395,1392,1390,1387,1385,1382,1380,1377,1375,1372,1370,1367,1365,1362,1360,1357,1355,1352,1350,1347,1345,1342,1340]},"latest":"1.397k"},
+
+  {"name":"cilium_drift_checker_config_delta","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_drop_bytes_total","labels":"direction=EGRESS reason=TTL exceeded","gaugeOrCounter":{"samples":[2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520,2520]},"latest":"2.52k"},
+
+  {"name":"cilium_drop_bytes_total","labels":"direction=EGRESS reason=Unsupported L3 protocol","gaugeOrCounter":{"samples":[92546,92546,92476,92476,92476,92476,92476,92476,92406,92406,92406,92406,92406,92336,92336,92336,92336,92336,92336,92266,92266,92266,92266,92266]},"latest":"92.55k"},
+
+  {"name":"cilium_drop_bytes_total","labels":"direction=INGRESS reason=Policy denied","gaugeOrCounter":{"samples":[3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256,3256]},"latest":"3.256k"},
+
+  {"name":"cilium_drop_bytes_total","labels":"direction=INGRESS reason=Policy denied by denylist","gaugeOrCounter":{"samples":[296,296,296,296,296,296,296,296,296,296,296,296,296,296,296,296,296,296,296,296,296,296,296,296]},"latest":"296"},
+
+  {"name":"cilium_drop_count_total","labels":"direction=EGRESS reason=TTL exceeded","gaugeOrCounter":{"samples":[16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16]},"latest":"16"},
+
+  {"name":"cilium_drop_count_total","labels":"direction=EGRESS reason=Unsupported L3 protocol","gaugeOrCounter":{"samples":[1307,1307,1306,1306,1306,1306,1306,1306,1305,1305,1305,1305,1305,1304,1304,1304,1304,1304,1304,1303,1303,1303,1303,1303]},"latest":"1.307k"},
+
+  {"name":"cilium_drop_count_total","labels":"direction=INGRESS reason=Policy denied","gaugeOrCounter":{"samples":[44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44]},"latest":"44"},
+
+  {"name":"cilium_drop_count_total","labels":"direction=INGRESS reason=Policy denied by denylist","gaugeOrCounter":{"samples":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]},"latest":"4"},
+
+  {"name":"cilium_endpoint","gaugeOrCounter":{"samples":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6]},"latest":"6"},
+
+  {"name":"cilium_endpoint_max_ifindex","gaugeOrCounter":{"samples":[26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26]},"latest":"26"},
+
+  {"name":"cilium_endpoint_regeneration_time_stats_seconds","labels":"scope=bpfCompilation status=success","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_endpoint_regeneration_time_stats_seconds","labels":"scope=bpfLoadProg status=success","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_endpoint_regeneration_time_stats_seconds","labels":"scope=bpfWaitForELF status=success","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_endpoint_regeneration_time_stats_seconds","labels":"scope=mapSync status=success","histogram":{"p50":[0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025],"p90":[0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045],"p99":[0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495]},"latest":"2.5ms / 4.5ms / 4.95ms"},
+
+  {"name":"cilium_endpoint_regeneration_time_stats_seconds","labels":"scope=policyCalculation status=success","histogram":{"p50":[0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025],"p90":[0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045],"p99":[0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495]},"latest":"2.5ms / 4.5ms / 4.95ms"},
+
+  {"name":"cilium_endpoint_regeneration_time_stats_seconds","labels":"scope=prepareBuild status=success","histogram":{"p50":[0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025],"p90":[0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045],"p99":[0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495]},"latest":"2.5ms / 4.5ms / 4.95ms"},
+
+  {"name":"cilium_endpoint_regeneration_time_stats_seconds","labels":"scope=proxyConfiguration status=success","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_endpoint_regeneration_time_stats_seconds","labels":"scope=proxyPolicyCalculation status=success","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_endpoint_regeneration_time_stats_seconds","labels":"scope=proxyWaitForAck status=success","histogram":{"p50":[0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025],"p90":[0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045],"p99":[0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495]},"latest":"2.5ms / 4.5ms / 4.95ms"},
+
+  {"name":"cilium_endpoint_regeneration_time_stats_seconds","labels":"scope=total status=success","histogram":{"p50":[0.003,0.0026470588,0.0027272727,0.0028125,0.0025,0.0026470588,0.0025,0.0026470588,0.0025,0.0026470588,0.0025,0.0025,0.0027272727,0.0028125,0.0025,0.0026470588,0.0025,0.0026470588,0.0025,0.0025,0.0025,0.0026470588,0.0025,0.0025],"p90":[0.07,0.004764706,0.0049090907,0.055,0.0045,0.004764706,0.0045,0.004764706,0.0045,0.004764706,0.0045,0.0045,0.0049090907,0.0275,0.0045,0.004764706,0.0045,0.004764706,0.0045,0.0045,0.0045,0.004764706,0.0045,0.0045],"p99":[0.097,0.091,0.047,0.0955,0.00495,0.0455,0.00495,0.0455,0.00495,0.0455,0.00495,0.00495,0.047,0.04775,0.00495,0.091,0.00495,0.0223,0.00495,0.00495,0.00495,0.091,0.00495,0.00495]},"latest":"3ms / 70ms / 97ms"},
+
+  {"name":"cilium_endpoint_regeneration_time_stats_seconds","labels":"scope=waitingForCTClean status=success","histogram":{"p50":[0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025],"p90":[0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045],"p99":[0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495]},"latest":"2.5ms / 4.5ms / 4.95ms"},
+
+  {"name":"cilium_endpoint_regeneration_time_stats_seconds","labels":"scope=waitingForLock status=success","histogram":{"p50":[0.0025,0.0025,0.0025,0.0025,0.0025,0.0026470588,0.0025,0.0025,0.0025,0.0026470588,0.0025,0.0025,0.0025,0.0026470588,0.0025,0.0025,0.0025,0.0026470588,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025],"p90":[0.0045,0.0045,0.0045,0.0045,0.0045,0.004764706,0.0045,0.0045,0.0045,0.004764706,0.0045,0.0045,0.0045,0.004764706,0.0045,0.0045,0.0045,0.004764706,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045],"p99":[0.00495,0.00495,0.00495,0.00495,0.00495,0.0455,0.00495,0.00495,0.00495,0.0455,0.00495,0.00495,0.00495,0.0455,0.00495,0.00495,0.00495,0.0223,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495]},"latest":"2.5ms / 4.5ms / 4.95ms"},
+
+  {"name":"cilium_endpoint_regeneration_time_stats_seconds","labels":"scope=waitingForPolicyRepository status=success","histogram":{"p50":[0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025],"p90":[0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045],"p99":[0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495]},"latest":"2.5ms / 4.5ms / 4.95ms"},
+
+  {"name":"cilium_endpoint_regenerations_total","labels":"outcome=failure","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_endpoint_regenerations_total","labels":"outcome=success","gaugeOrCounter":{"samples":[8777,8765,8747,8735,8717,8705,8687,8675,8657,8645,8627,8615,8597,8585,8567,8555,8537,8525,8507,8495,8477,8465,8447,8435]},"latest":"8.777k"},
+
+  {"name":"cilium_endpoint_state","labels":"endpoint_state=disconnecting","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_endpoint_state","labels":"endpoint_state=ready","gaugeOrCounter":{"samples":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6]},"latest":"6"},
+
+  {"name":"cilium_endpoint_state","labels":"endpoint_state=regenerating","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_endpoint_state","labels":"endpoint_state=restoring","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_endpoint_state","labels":"endpoint_state=waiting-for-identity","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_endpoint_state","labels":"endpoint_state=waiting-to-regenerate","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_errors_warnings_total","labels":"level=error subsystem=envoy-proxy","gaugeOrCounter":{"samples":[547,546,545,544,543,542,541,540,539,538,537,536,535,534,533,532,531,530,529,528,527,526,525,524]},"latest":"547"},
+
+  {"name":"cilium_errors_warnings_total","labels":"level=error subsystem=init","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_errors_warnings_total","labels":"level=warning subsystem=init","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_errors_warnings_total","labels":"level=warning subsystem=k8s-watcher","gaugeOrCounter":{"samples":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6]},"latest":"6"},
+
+  {"name":"cilium_event_ts","labels":"action=DELETE scope=/v1/endpoint source=api","gaugeOrCounter":{"samples":[1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=GET scope=/v1/cluster source=api","gaugeOrCounter":{"samples":[1733836900,1733836700,1733836400,1733836000,1733835800,1733835500,1733835100,1733834900,1733834600,1733834200,1733834000,1733833700,1733833300,1733833100,1733832800,1733832400,1733832200,1733832000,1733831600,1733831300,1733831000,1733830700,1733830400,1733830000]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=GET scope=/v1/config source=api","gaugeOrCounter":{"samples":[1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=GET scope=/v1/healthz source=api","gaugeOrCounter":{"samples":[1733837000,1733836700,1733836400,1733836200,1733835800,1733835500,1733835300,1733834900,1733834600,1733834400,1733834000,1733833700,1733833500,1733833100,1733832800,1733832600,1733832200,1733832000,1733831700,1733831300,1733831000,1733830800,1733830400,1733830100]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=POST scope=/v1/ipam source=api","gaugeOrCounter":{"samples":[1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=PUT scope=/v1/endpoint source=api","gaugeOrCounter":{"samples":[1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=create scope=CiliumEndpoint source=k8s","gaugeOrCounter":{"samples":[1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=create scope=Endpoint source=k8s","gaugeOrCounter":{"samples":[1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=create scope=Namespace source=k8s","gaugeOrCounter":{"samples":[1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200,1733673200]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=create scope=Pod source=k8s","gaugeOrCounter":{"samples":[1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700,1733673700]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=create scope=Service source=k8s","gaugeOrCounter":{"samples":[1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=delete scope=CiliumEndpoint source=k8s","gaugeOrCounter":{"samples":[1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=delete scope=Endpoint source=k8s","gaugeOrCounter":{"samples":[1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=delete scope=Namespace source=k8s","gaugeOrCounter":{"samples":[1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=delete scope=Pod source=k8s","gaugeOrCounter":{"samples":[1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=delete scope=Service source=k8s","gaugeOrCounter":{"samples":[1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=update scope=CiliumEndpoint source=k8s","gaugeOrCounter":{"samples":[1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=update scope=CiliumNode source=k8s","gaugeOrCounter":{"samples":[1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=update scope=Endpoint source=k8s","gaugeOrCounter":{"samples":[1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200,1733740200]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=update scope=Namespace source=k8s","gaugeOrCounter":{"samples":[1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=update scope=Node source=k8s","gaugeOrCounter":{"samples":[1733836900,1733836700,1733836400,1733836000,1733835800,1733835400,1733835100,1733834900,1733834500,1733834200,1733833900,1733833600,1733833300,1733833000,1733832700,1733832300,1733832100,1733831800,1733831400,1733831200,1733830800,1733830500,1733830300,1733829900]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=update scope=Pod source=k8s","gaugeOrCounter":{"samples":[1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000,1733740000]},"latest":"1.734G"},
+
+  {"name":"cilium_event_ts","labels":"action=update scope=Service source=k8s","gaugeOrCounter":{"samples":[1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600]},"latest":"1.734G"},
+
+  {"name":"cilium_feature_adv_connect_and_lb_bandwidth_manager_enabled","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_feature_adv_connect_and_lb_bgp_enabled","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_feature_adv_connect_and_lb_cilium_envoy_config_enabled","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_feature_adv_connect_and_lb_cilium_node_config_enabled","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_feature_adv_connect_and_lb_egress_gateway_enabled","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_feature_adv_connect_and_lb_envoy_proxy_enabled","labels":"mode=standalone","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_feature_adv_connect_and_lb_k8s_internal_traffic_policy_enabled","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_feature_adv_connect_and_lb_kube_proxy_replacement_enabled","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_feature_adv_connect_and_lb_l2_lb_enabled","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_feature_adv_connect_and_lb_l2_pod_announcement_enabled","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_feature_adv_connect_and_lb_node_port_configuration","labels":"acceleration=disabled algorithm=random mode=snat","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_feature_adv_connect_and_lb_sctp_enabled","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_feature_adv_connect_and_lb_vtep_enabled","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_feature_controlplane_cilium_endpoint_slices_enabled","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_feature_controlplane_identity_allocation","labels":"mode=crd","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_feature_controlplane_ipam","labels":"mode=cluster-pool","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_feature_datapath_chaining_enabled","labels":"mode=none","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_feature_datapath_config","labels":"mode=veth","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_feature_datapath_internet_protocol","labels":"address_family=ipv4-only","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_feature_datapath_network","labels":"mode=overlay-vxlan","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_feature_network_policies_host_firewall_enabled","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_feature_network_policies_internal_traffic_policy_services_total","labels":"action=add","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_feature_network_policies_local_redirect_policy_enabled","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_feature_network_policies_mutual_auth_enabled","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_feature_network_policies_non_defaultdeny_policies_enabled","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_forward_bytes_total","labels":"direction=EGRESS","gaugeOrCounter":{"samples":[9344888000,9344164000,9343438000,9342717000,9341996000,9341272000,9340542000,9339820000,9339097000,9338370000,9337639000,9336920000,9336197000,9335472000,9334751000,9334022000,9333299000,9332573000,9331848000,9331123000,9330397000,9329667000,9328944000,9328219000]},"latest":"9.345G"},
+
+  {"name":"cilium_forward_bytes_total","labels":"direction=INGRESS","gaugeOrCounter":{"samples":[12447328000,12445697000,12444065000,12442434000,12440806000,12439170000,12437539000,12435912000,12434281000,12432632000,12430983000,12429361000,12427732000,12426104000,12424478000,12422842000,12421215000,12419583000,12417958000,12416325000,12414700000,12413042000,12411419000,12409796000]},"latest":"12.45G"},
+
+  {"name":"cilium_forward_count_total","labels":"direction=EGRESS","gaugeOrCounter":{"samples":[40034304,40029724,40025150,40020612,40016056,40011480,40006904,40002330,39997770,39993150,39988532,39984000,39979436,39974860,39970320,39965704,39961144,39956572,39951980,39947384,39942790,39938190,39933624,39929064]},"latest":"40.03M"},
+
+  {"name":"cilium_forward_count_total","labels":"direction=INGRESS","gaugeOrCounter":{"samples":[98983290,98977580,98971890,98966220,98960550,98954840,98949176,98943500,98937850,98932110,98926340,98920720,98915020,98909370,98903730,98898010,98892370,98886680,98881000,98875310,98869630,98863920,98858270,98852616]},"latest":"98.98M"},
+
+  {"name":"cilium_fqdn_gc_deletions_total","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_fqdn_selectors","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_fqdn_semaphore_rejected_total","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_hive_degraded_status","labels":"module=agent.controlplane.envoy-proxy","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_hive_status","labels":"status=degraded","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_hive_status","labels":"status=ok","gaugeOrCounter":{"samples":[74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74,74]},"latest":"74"},
+
+  {"name":"cilium_identity","labels":"type=cluster_local","gaugeOrCounter":{"samples":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},"latest":"3"},
+
+  {"name":"cilium_identity","labels":"type=reserved","gaugeOrCounter":{"samples":[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]},"latest":"10"},
+
+  {"name":"cilium_identity_cache_timer_duration","labels":"name=id-alloc-update-policy-maps","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0 / 0 / 0"},
+
+  {"name":"cilium_identity_cache_timer_trigger_folds","labels":"name=id-alloc-update-policy-maps","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0 / 0 / 0"},
+
+  {"name":"cilium_identity_cache_timer_trigger_latency","labels":"name=id-alloc-update-policy-maps","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0 / 0 / 0"},
+
+  {"name":"cilium_identity_label_sources","labels":"source=k8s","gaugeOrCounter":{"samples":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},"latest":"3"},
+
+  {"name":"cilium_identity_label_sources","labels":"source=reserved","gaugeOrCounter":{"samples":[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]},"latest":"10"},
+
+  {"name":"cilium_ipam_capacity","labels":"family=ipv4","gaugeOrCounter":{"samples":[254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254,254]},"latest":"254"},
+
+  {"name":"cilium_ipam_events_total","labels":"action=allocate family=ipv4","gaugeOrCounter":{"samples":[7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7]},"latest":"7"},
+
+  {"name":"cilium_ipam_events_total","labels":"action=release family=ipv4","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_ipcache_errors_total","labels":"error=cannot_overwrite_by_source type=upsert","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_ipcache_events_total","labels":"type=delete","gaugeOrCounter":{"samples":[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]},"latest":"10"},
+
+  {"name":"cilium_ipcache_events_total","labels":"type=upsert","gaugeOrCounter":{"samples":[48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48]},"latest":"48"},
+
+  {"name":"cilium_k8s_client_api_calls_total","labels":"host=10.43.0.1:443 method=DELETE return_code=404","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_k8s_client_api_calls_total","labels":"host=10.43.0.1:443 method=GET return_code=200","gaugeOrCounter":{"samples":[7601,7585,7571,7558,7542,7530,7516,7501,7488,7475,7461,7448,7433,7418,7403,7387,7375,7361,7346,7333,7318,7305,7291,7273]},"latest":"7.601k"},
+
+  {"name":"cilium_k8s_client_api_calls_total","labels":"host=10.43.0.1:443 method=GET return_code=403","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_k8s_client_api_calls_total","labels":"host=10.43.0.1:443 method=GET return_code=404","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_k8s_client_api_calls_total","labels":"host=10.43.0.1:443 method=POST return_code=201","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_k8s_client_api_calls_total","labels":"host=10.43.0.1:443 method=PUT return_code=200","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=DELETE path=/apis/cilium.io/v2/namespaces/{namespace}/ciliumendpoints/{name}","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/api/v1/namespaces","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/api/v1/namespaces/{name}","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/api/v1/nodes","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/api/v1/pods","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/api/v1/services","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/apiextensions.k8s.io/v1/customresourcedefinitions","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumclusterwideenvoyconfigs","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumclusterwidenetworkpolicies","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumendpoints","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumenvoyconfigs","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumidentities","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumnetworkpolicies","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumnodes","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumnodes/{name}","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/cilium.io/v2/namespaces/{namespace}/ciliumendpoints/{name}","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/cilium.io/v2alpha1/ciliumcidrgroups","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/coordination.k8s.io/v1/namespaces/{namespace}/leases","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/discovery.k8s.io/v1/endpointslices","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/apis/networking.k8s.io/v1/networkpolicies","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/healthz","histogram":{"p50":[0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025],"p90":[0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045],"p99":[0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495]},"latest":"2.5ms / 4.5ms / 4.95ms"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=GET path=/version","histogram":{"p50":[0,0.0025,0,0,0.0025,0,0,0.0025,0,0,0.0025,0,0,0.0025,0,0,0.0025,0,0,0.0025,0,0,0.0025,0],"p90":[0,0.0045,0,0,0.0045,0,0,0.0045,0,0,0.0045,0,0,0.0045,0,0,0.0045,0,0,0.0045,0,0,0.0045,0],"p99":[0,0.00495,0,0,0.00495,0,0,0.00495,0,0,0.00495,0,0,0.00495,0,0,0.00495,0,0,0.00495,0,0,0.00495,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=POST path=/apis/cilium.io/v2/ciliumidentities","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=POST path=/apis/cilium.io/v2/namespaces/{namespace}/ciliumendpoints","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_api_latency_time_seconds","labels":"method=PUT path=/apis/cilium.io/v2/ciliumnodes/{name}","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=DELETE path=/apis/cilium.io/v2/namespaces/{namespace}/ciliumendpoints/{name}","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/api/v1/namespaces","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/api/v1/namespaces/{name}","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/api/v1/nodes","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/api/v1/pods","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/api/v1/services","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/apiextensions.k8s.io/v1/customresourcedefinitions","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumclusterwideenvoyconfigs","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumclusterwidenetworkpolicies","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumendpoints","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumenvoyconfigs","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumidentities","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumnetworkpolicies","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumnodes","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/cilium.io/v2/ciliumnodes/{name}","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/cilium.io/v2/namespaces/{namespace}/ciliumendpoints/{name}","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/cilium.io/v2alpha1/ciliumcidrgroups","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/coordination.k8s.io/v1/namespaces/{namespace}/leases","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/discovery.k8s.io/v1/endpointslices","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/apis/networking.k8s.io/v1/networkpolicies","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/healthz","histogram":{"p50":[0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025,0.0025],"p90":[0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045,0.0045],"p99":[0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495,0.00495]},"latest":"2.5ms / 4.5ms / 4.95ms"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=GET path=/version","histogram":{"p50":[0,0.0025,0,0,0.0025,0,0,0.0025,0,0,0.0025,0,0,0.0025,0,0,0.0025,0,0,0.0025,0,0,0.0025,0],"p90":[0,0.0045,0,0,0.0045,0,0,0.0045,0,0,0.0045,0,0,0.0045,0,0,0.0045,0,0,0.0045,0,0,0.0045,0],"p99":[0,0.00495,0,0,0.00495,0,0,0.00495,0,0,0.00495,0,0,0.00495,0,0,0.00495,0,0,0.00495,0,0,0.00495,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=POST path=/apis/cilium.io/v2/ciliumidentities","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=POST path=/apis/cilium.io/v2/namespaces/{namespace}/ciliumendpoints","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_client_rate_limiter_duration_seconds","labels":"method=PUT path=/apis/cilium.io/v2/ciliumnodes/{name}","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_k8s_event_lag_seconds","labels":"source=k8s","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_k8s_terminating_endpoints_events_total","gaugeOrCounter":{"samples":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6]},"latest":"6"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=create equal=false scope=CiliumEndpoint valid=true","gaugeOrCounter":{"samples":[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]},"latest":"10"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=create equal=false scope=Endpoint valid=true","gaugeOrCounter":{"samples":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},"latest":"5"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=create equal=false scope=Namespace valid=true","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=create equal=false scope=Pod valid=true","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=create equal=false scope=Service valid=true","gaugeOrCounter":{"samples":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},"latest":"5"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=delete equal=false scope=CiliumEndpoint valid=true","gaugeOrCounter":{"samples":[9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9]},"latest":"9"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=delete equal=false scope=Endpoint valid=true","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=delete equal=false scope=Namespace valid=true","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=delete equal=false scope=Pod valid=true","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=delete equal=false scope=Service valid=true","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=update equal=false scope=CiliumEndpoint valid=true","gaugeOrCounter":{"samples":[34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34]},"latest":"34"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=update equal=false scope=CiliumNode valid=true","gaugeOrCounter":{"samples":[11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11]},"latest":"11"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=update equal=false scope=Endpoint valid=true","gaugeOrCounter":{"samples":[39,39,39,39,39,39,39,39,39,39,39,39,39,39,39,39,39,39,39,39,39,39,39,39]},"latest":"39"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=update equal=false scope=Namespace valid=true","gaugeOrCounter":{"samples":[11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11]},"latest":"11"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=update equal=false scope=Node valid=true","gaugeOrCounter":{"samples":[540,539,538,537,536,535,534,533,532,531,530,529,528,527,526,525,524,523,522,521,520,519,518,517]},"latest":"540"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=update equal=false scope=Pod valid=true","gaugeOrCounter":{"samples":[19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19]},"latest":"19"},
+
+  {"name":"cilium_kubernetes_events_received_total","labels":"action=update equal=false scope=Service valid=true","gaugeOrCounter":{"samples":[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15]},"latest":"15"},
+
+  {"name":"cilium_kubernetes_events_total","labels":"action=delete scope=CiliumEndpoint status=success","gaugeOrCounter":{"samples":[9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9]},"latest":"9"},
+
+  {"name":"cilium_kubernetes_events_total","labels":"action=delete scope=Endpoint status=success","gaugeOrCounter":{"samples":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6]},"latest":"6"},
+
+  {"name":"cilium_kubernetes_events_total","labels":"action=delete scope=Namespace status=success","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_kubernetes_events_total","labels":"action=delete scope=Pod status=success","gaugeOrCounter":{"samples":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]},"latest":"4"},
+
+  {"name":"cilium_kubernetes_events_total","labels":"action=delete scope=Service status=success","gaugeOrCounter":{"samples":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6]},"latest":"6"},
+
+  {"name":"cilium_kubernetes_events_total","labels":"action=update scope=CiliumEndpoint status=success","gaugeOrCounter":{"samples":[44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44,44]},"latest":"44"},
+
+  {"name":"cilium_kubernetes_events_total","labels":"action=update scope=CiliumNode status=success","gaugeOrCounter":{"samples":[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]},"latest":"10"},
+
+  {"name":"cilium_kubernetes_events_total","labels":"action=update scope=Endpoint status=success","gaugeOrCounter":{"samples":[132,132,132,132,132,132,132,132,132,132,132,132,132,132,132,132,132,132,132,132,132,132,132,132]},"latest":"132"},
+
+  {"name":"cilium_kubernetes_events_total","labels":"action=update scope=Namespace status=success","gaugeOrCounter":{"samples":[12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12]},"latest":"12"},
+
+  {"name":"cilium_kubernetes_events_total","labels":"action=update scope=Node status=success","gaugeOrCounter":{"samples":[541,540,539,538,537,536,535,534,533,532,531,530,529,528,527,526,525,524,523,522,521,520,519,518]},"latest":"541"},
+
+  {"name":"cilium_kubernetes_events_total","labels":"action=update scope=Pod status=success","gaugeOrCounter":{"samples":[40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40]},"latest":"40"},
+
+  {"name":"cilium_kubernetes_events_total","labels":"action=update scope=Service status=success","gaugeOrCounter":{"samples":[60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60]},"latest":"60"},
+
+  {"name":"cilium_nat_endpoint_max_connection","labels":"family=ipv4","gaugeOrCounter":{"samples":[0.007934812,0.007904294,0.007843257,0.0077517014,0.007599109,0.007538072,0.0075075533,0.007415998,0.007354961,0.007202368,0.0071108127,0.0070497757,0.0069887387,0.006897183,0.006836146,0.006775109,0.0067445906,0.0066835536,0.006653035,0.0065004425,0.0064394055,0.0064394055,0.0064394055,0.00634785]},"latest":"7.935m"},
+
+  {"name":"cilium_nat_endpoint_max_connection","labels":"family=ipv6","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=http source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=10.42.0.139 target_node_name=jrk1 target_node_type=remote_intra_cluster type=endpoint","gaugeOrCounter":{"samples":[0.002389782,0.001711613,0.001744282,0.001621774,0.002611171,0.002662215,0.001615354,0.00154214,0.001463973,0.002168979,0.002190272,0.001431014,0.001599319,0.001552069,0.001230636,0.001956043,0.001413216,0.001495179,0.001369461,0.001555263,0.00133737,0.001365657,0.001517062,0.001497227]},"latest":"2.39m"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=http source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=10.42.1.177 target_node_name=jrk3 target_node_type=remote_intra_cluster type=endpoint","gaugeOrCounter":{"samples":[0.001960712,0.001898583,0.001865039,0.00185308,0.001871164,0.002314234,0.002276022,0.002003586,0.001645401,0.001842582,0.002078848,0.001950507,0.001672241,0.001631408,0.002089949,0.001670483,0.002081175,0.001825658,0.001888661,0.00175069,0.001699933,0.002023109,0.003290806,0.00198551]},"latest":"1.961m"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=http source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=10.42.2.56 target_node_name=jrk2 target_node_type=remote_intra_cluster type=endpoint","gaugeOrCounter":{"samples":[0.002058135,0.001788035,0.001844621,0.001694111,0.001751282,0.001808743,0.001596395,0.001485553,0.001970632,0.001694404,0.00199776,0.002070974,0.003046085,0.002662231,0.001802636,0.003221666,0.002201058,0.002031296,0.001932122,0.001815737,0.001699641,0.001893311,0.001716283,0.001550023]},"latest":"2.058m"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=http source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=10.42.3.24 target_node_name=jrk4 target_node_type=local_node type=endpoint","gaugeOrCounter":{"samples":[0.000998733,0.001045694,0.000662418,0.001026151,0.000860473,0.001308211,0.000831012,0.001071069,0.000834805,0.001238791,0.00092202,0.000825181,0.001068449,0.000808849,0.000992908,0.000882932,0.001027024,0.000800968,0.001068151,0.001120652,0.000775587,0.001183356,0.000814388,0.000926104]},"latest":"998.7µ"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=http source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=192.168.254.19 target_node_name=jrk1 target_node_type=remote_intra_cluster type=node","gaugeOrCounter":{"samples":[0.000938937,0.001038985,0.001089738,0.001194453,0.001862122,0.001741072,0.001091779,0.001892454,0.001213122,0.001133201,0.002001842,0.001064073,0.001082742,0.001104037,0.001179006,0.001224496,0.000962854,0.001010981,0.000977728,0.001313164,0.001097314,0.0011081,0.001234417,0.001132619]},"latest":"938.9µ"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=http source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=192.168.254.23 target_node_name=jrk3 target_node_type=remote_intra_cluster type=node","gaugeOrCounter":{"samples":[0.001507724,0.001034027,0.001516767,0.001143701,0.00150889,0.001256873,0.001169367,0.001546515,0.001347298,0.001580939,0.001206122,0.00131959,0.001208167,0.001385224,0.001074289,0.001094404,0.001619437,0.001343211,0.001042191,0.001146612,0.001655889,0.001390158,0.002439666,0.001309381]},"latest":"1.508m"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=http source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=192.168.254.28 target_node_name=jrk2 target_node_type=remote_intra_cluster type=node","gaugeOrCounter":{"samples":[0.001188911,0.001485848,0.001201163,0.001291001,0.001277875,0.000978022,0.001208162,0.001140781,0.001246958,0.001224498,0.001089449,0.001085366,0.001349052,0.002031603,0.001301223,0.001930667,0.001132614,0.00112503,0.001160322,0.001250452,0.001103148,0.001209315,0.001242001,0.001022944]},"latest":"1.189m"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=http source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=192.168.254.30 target_node_name=jrk4 target_node_type=local_node type=node","gaugeOrCounter":{"samples":[0.001209621,0.000504908,0.000487698,0.000833055,0.000524159,0.000544285,0.000766841,0.000935143,0.00048099,0.000443363,0.000662128,0.000481283,0.000609334,0.000868645,0.00061488,0.000679044,0.000564411,0.000731839,0.001181032,0.00049353,0.000836258,0.000656578,0.000546037,0.000476324]},"latest":"1.21m"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=icmp source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=10.42.0.139 target_node_name=jrk1 target_node_type=remote_intra_cluster type=endpoint","gaugeOrCounter":{"samples":[0.001124449,0.001528143,0.001200579,0.001038693,0.001436261,0.001263582,0.001206995,0.001055609,0.001142243,0.001573355,0.001060863,0.000966357,0.000993777,0.000982695,0.000939821,0.001587352,0.000976563,0.001086236,0.001093236,0.00119824,0.001022935,0.000868921,0.001202915,0.001115117]},"latest":"1.124m"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=icmp source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=10.42.1.177 target_node_name=jrk3 target_node_type=remote_intra_cluster type=endpoint","gaugeOrCounter":{"samples":[0.001627607,0.001427511,0.001503349,0.001079238,0.001442387,0.002120847,0.001632564,0.001619145,0.001314046,0.001213998,0.001550604,0.001728534,0.001214875,0.001048908,0.001604579,0.001445593,0.001996587,0.0014453,0.001255412,0.001321331,0.001356622,0.001267068,0.001575982,0.001548855]},"latest":"1.628m"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=icmp source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=10.42.2.56 target_node_name=jrk2 target_node_type=remote_intra_cluster type=endpoint","gaugeOrCounter":{"samples":[0.001358965,0.001435678,0.001383467,0.001168202,0.001337671,0.00145872,0.001221871,0.001332418,0.00139601,0.001329214,0.001359258,0.001283712,0.0014421,0.001568112,0.001453485,0.00165619,0.001420508,0.001523472,0.001390462,0.001315789,0.001223905,0.001227983,0.00132659,0.00120554]},"latest":"1.359m"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=icmp source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=10.42.3.24 target_node_name=jrk4 target_node_type=local_node type=endpoint","gaugeOrCounter":{"samples":[0.000450947,0.000373941,0.000285269,0.000241224,0.000268935,0.000385609,0.00048799,0.00033573,0.000274477,0.000307146,0.000235682,0.000332814,0.000296645,0.000385319,0.000300147,0.00035119,0.00043607,0.000439278,0.000483906,0.000263974,0.000414774,0.000394063,0.000323188,0.000580748]},"latest":"450.9µ"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=icmp source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=192.168.254.19 target_node_name=jrk1 target_node_type=remote_intra_cluster type=node","gaugeOrCounter":{"samples":[0.000748175,0.000718422,0.000939521,0.000715505,0.000866307,0.000658918,0.000773258,0.000747298,0.000891977,0.000750508,0.000882351,0.000630626,0.000846184,0.000709092,0.000789893,0.000793968,0.000732131,0.000711421,0.000694502,0.000878262,0.000812048,0.000790459,0.000710549,0.000797179]},"latest":"748.2µ"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=icmp source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=192.168.254.23 target_node_name=jrk3 target_node_type=remote_intra_cluster type=node","gaugeOrCounter":{"samples":[0.000956438,0.000775009,0.000840055,0.000825471,0.000997858,0.000719589,0.000793676,0.000998147,0.000971898,0.001084197,0.000731549,0.000873893,0.000729801,0.000973653,0.000783476,0.000745257,0.000894016,0.000747006,0.000754006,0.000876803,0.000910928,0.000857546,0.001006902,0.000688089]},"latest":"956.4µ"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=icmp source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=192.168.254.28 target_node_name=jrk2 target_node_type=remote_intra_cluster type=node","gaugeOrCounter":{"samples":[0.000994066,0.000866016,0.000850556,0.000821679,0.000754591,0.000749924,0.000703838,0.000844137,0.001064071,0.000707922,0.000748758,0.000814097,0.000833933,0.000786681,0.000830438,0.001038109,0.000953811,0.000842679,0.0008068,0.000717544,0.000820798,0.000960801,0.000817305,0.000766552]},"latest":"994.1µ"},
+
+  {"name":"cilium_node_connectivity_latency_seconds","labels":"address_type=primary protocol=icmp source_cluster=default source_node_name=jrk4 target_cluster=default target_node_ip=192.168.254.30 target_node_name=jrk4 target_node_type=local_node type=node","gaugeOrCounter":{"samples":[0.000177637,0.000185513,0.000250559,0.000302187,0.000212931,0.000141176,0.000277684,0.000203888,0.000155468,0.000204763,0.000268059,0.000233641,0.000308313,0.000256685,0.00024531,0.000251141,0.000295769,0.000291394,0.000151676,0.000174719,0.000285559,0.000146717,0.000302479,0.000224307]},"latest":"177.6µ"},
+
+  {"name":"cilium_node_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 target_cluster=default target_node_name=jrk1 target_node_type=remote_intra_cluster type=endpoint","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_node_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 target_cluster=default target_node_name=jrk1 target_node_type=remote_intra_cluster type=node","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_node_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 target_cluster=default target_node_name=jrk2 target_node_type=remote_intra_cluster type=endpoint","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_node_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 target_cluster=default target_node_name=jrk2 target_node_type=remote_intra_cluster type=node","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_node_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 target_cluster=default target_node_name=jrk3 target_node_type=remote_intra_cluster type=endpoint","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_node_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 target_cluster=default target_node_name=jrk3 target_node_type=remote_intra_cluster type=node","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_node_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 target_cluster=default target_node_name=jrk4 target_node_type=local_node type=endpoint","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_node_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 target_cluster=default target_node_name=jrk4 target_node_type=local_node type=node","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_node_health_connectivity_latency_seconds","labels":"address_type=primary protocol=http source_cluster=default source_node_name=jrk4 type=endpoint","histogram":{"p50":[0.0016428571,0.0017058824,0.0015625,0.0017941176,0.00165625,0.0017941176,0.0016,0.001617647,0.0016428571,0.0016428571,0.0015625,0.00165625,0.0017,0.00165625,0.0017058824,0.0015357143,0.001617647,0.0016428571,0.0016428571,0.0017941176,0.0015625,0.0016,0.00175,0.0016],"p90":[0.0025,0.0024117648,0.0023125,0.0025,0.00240625,0.0025,0.0024,0.0023235295,0.0025,0.0025,0.0023125,0.00240625,0.0025,0.00240625,0.0024117648,0.002392857,0.0023235295,0.0025,0.0025,0.0025,0.0023125,0.0024,0.0033333334,0.0024],"p99":[0.00475,0.0045,0.00248125,0.00475,0.0045,0.00475,0.0045,0.002482353,0.00475,0.00475,0.00248125,0.0045,0.00475,0.0045,0.0045,0.0045,0.002482353,0.00475,0.00475,0.00475,0.00248125,0.0045,0.004833333,0.0045]},"latest":"1.643ms / 2.5ms / 4.75ms"},
+
+  {"name":"cilium_node_health_connectivity_latency_seconds","labels":"address_type=primary protocol=http source_cluster=default source_node_name=jrk4 type=node","histogram":{"p50":[0.0015,0.0016,0.0014285714,0.0015,0.0015,0.0013461538,0.0013461538,0.0014615385,0.0013461538,0.0013461538,0.0014285714,0.0015625,0.0015625,0.0015,0.0014615385,0.0014285714,0.00125,0.0014615385,0.0014285714,0.0015,0.0014285714,0.0014285714,0.0014285714,0.0015],"p90":[0.0023,0.0024,0.0022857143,0.0023,0.0023,0.0022692308,0.0022692308,0.0023846154,0.0022692308,0.0022692308,0.0022857143,0.0023125,0.0023125,0.0023,0.0023846154,0.0022857143,0.00225,0.0023846154,0.0022857143,0.0023,0.0022857143,0.0022857143,0.0022857143,0.0023],"p99":[0.00248,0.0045,0.0024785714,0.00248,0.00248,0.0024769232,0.0024769232,0.0045,0.0024769232,0.0024769232,0.0024785714,0.00248125,0.00248125,0.00248,0.0045,0.0024785714,0.002475,0.0045,0.0024785714,0.00248,0.0024785714,0.0024785714,0.0024785714,0.00248]},"latest":"1.5ms / 2.3ms / 2.48ms"},
+
+  {"name":"cilium_node_health_connectivity_latency_seconds","labels":"address_type=primary protocol=icmp source_cluster=default source_node_name=jrk4 type=endpoint","histogram":{"p50":[0.0015,0.0015,0.0014285714,0.0015,0.0013461538,0.0015,0.0014285714,0.0015,0.0015,0.0015,0.0014285714,0.0014285714,0.00125,0.0014285714,0.0014285714,0.0014285714,0.0014285714,0.0015,0.0014285714,0.0014285714,0.0014285714,0.0014285714,0.0014285714,0.0013461538],"p90":[0.0023,0.0023,0.0022857143,0.0023,0.0022692308,0.0023,0.0022857143,0.0023,0.0023,0.0023,0.0022857143,0.0022857143,0.00225,0.0022857143,0.0022857143,0.0022857143,0.0022857143,0.0023,0.0022857143,0.0022857143,0.0022857143,0.0022857143,0.0022857143,0.0022692308],"p99":[0.00248,0.00248,0.0024785714,0.00248,0.0024769232,0.00248,0.0024785714,0.00248,0.00248,0.00248,0.0024785714,0.0024785714,0.002475,0.0024785714,0.0024785714,0.0024785714,0.0024785714,0.00248,0.0024785714,0.0024785714,0.0024785714,0.0024785714,0.0024785714,0.0024769232]},"latest":"1.5ms / 2.3ms / 2.48ms"},
+
+  {"name":"cilium_node_health_connectivity_latency_seconds","labels":"address_type=primary protocol=icmp source_cluster=default source_node_name=jrk4 type=node","histogram":{"p50":[0.00058823527,0.00052631577,0.00052631577,0.00052631577,0.00052631577,0.00052631577,0.00058823527,0.00052631577,0.00058823527,0.00052631577,0.00052631577,0.0005,0.00058823527,0.00055555557,0.00055555557,0.00055555557,0.000625,0.000625,0.00052631577,0.00052631577,0.00052631577,0.0005,0.00052631577,0.00052631577],"p90":[0.0015,0.00094736845,0.00094736845,0.00094736845,0.00094736845,0.00094736845,0.0015,0.00094736845,0.0015,0.00094736845,0.00094736845,0.0009,0.0015,0.001,0.001,0.001,0.00175,0.00175,0.00094736845,0.00094736845,0.00094736845,0.0009,0.00094736845,0.00094736845],"p99":[0.0024,0.0022,0.0022,0.0022,0.0022,0.0022,0.0024,0.0022,0.0024,0.0022,0.0022,0.00099,0.0024,0.00235,0.00235,0.00235,0.002425,0.002425,0.0022,0.0022,0.0022,0.00099,0.0022,0.0022]},"latest":"588.2µs / 1.5ms / 2.4ms"},
+
+  {"name":"cilium_node_health_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 status=reachable type=endpoint","gaugeOrCounter":{"samples":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]},"latest":"4"},
+
+  {"name":"cilium_node_health_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 status=reachable type=node","gaugeOrCounter":{"samples":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]},"latest":"4"},
+
+  {"name":"cilium_node_health_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 status=unknown type=endpoint","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_node_health_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 status=unknown type=node","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_node_health_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 status=unreachable type=endpoint","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_node_health_connectivity_status","labels":"source_cluster=default source_node_name=jrk4 status=unreachable type=node","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_nodes_all_datapath_validations_total","gaugeOrCounter":{"samples":[6808,6795,6783,6771,6758,6746,6733,6721,6708,6696,6684,6671,6659,6646,6634,6621,6609,6597,6584,6572,6559,6547,6534,6522]},"latest":"6.808k"},
+
+  {"name":"cilium_nodes_all_events_received_total","labels":"event_type=add source=custom-resource","gaugeOrCounter":{"samples":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},"latest":"3"},
+
+  {"name":"cilium_nodes_all_events_received_total","labels":"event_type=add source=local","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_nodes_all_events_received_total","labels":"event_type=delete source=restored","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_nodes_all_events_received_total","labels":"event_type=update source=custom-resource","gaugeOrCounter":{"samples":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},"latest":"3"},
+
+  {"name":"cilium_nodes_all_num","gaugeOrCounter":{"samples":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},"latest":"3"},
+
+  {"name":"cilium_policy","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_change_total","labels":"outcome=failure","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_change_total","labels":"outcome=success","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_policy_endpoint_enforcement_status","labels":"enforcement=audit-both","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_endpoint_enforcement_status","labels":"enforcement=audit-egress","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_endpoint_enforcement_status","labels":"enforcement=audit-ingress","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_endpoint_enforcement_status","labels":"enforcement=both","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_endpoint_enforcement_status","labels":"enforcement=egress","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_endpoint_enforcement_status","labels":"enforcement=ingress","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_endpoint_enforcement_status","labels":"enforcement=none","gaugeOrCounter":{"samples":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6]},"latest":"6"},
+
+  {"name":"cilium_policy_implementation_delay","labels":"source=api","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0 / 0 / 0"},
+
+  {"name":"cilium_policy_implementation_delay","labels":"source=custom-resource","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0 / 0 / 0"},
+
+  {"name":"cilium_policy_implementation_delay","labels":"source=k8s","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0 / 0 / 0"},
+
+  {"name":"cilium_policy_l7_total","labels":"proxy_type=envoy rule=denied","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_l7_total","labels":"proxy_type=envoy rule=forwarded","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_l7_total","labels":"proxy_type=envoy rule=parse_errors","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_l7_total","labels":"proxy_type=envoy rule=received","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_l7_total","labels":"proxy_type=fqdn rule=denied","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_l7_total","labels":"proxy_type=fqdn rule=forwarded","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_l7_total","labels":"proxy_type=fqdn rule=parse_errors","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_l7_total","labels":"proxy_type=fqdn rule=received","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_max_revision","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_regeneration_total","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_selector_match_count_max","labels":"class=cluster","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_selector_match_count_max","labels":"class=fqdn","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_selector_match_count_max","labels":"class=other","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_policy_selector_match_count_max","labels":"class=world","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_process_cpu_seconds_total","gaugeOrCounter":{"samples":[5652.3,5643.53,5635.23,5626.9,5618.78,5610.18,5600.9,5590.9,5580.55,5570.29,5559.92,5549.43,5539.35,5529.47,5518.88,5508.51,5498.41,5488.14,5478.76,5469.32,5459.95,5450.6,5440.77,5431.49]},"latest":"5.652k"},
+
+  {"name":"cilium_process_max_fds","gaugeOrCounter":{"samples":[1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576,1048576]},"latest":"1.049M"},
+
+  {"name":"cilium_process_network_receive_bytes_total","gaugeOrCounter":{"samples":[14285158000,14284227000,14283295000,14282358000,14281425000,14280481000,14279549000,14278620000,14277676000,14276746000,14275797000,14274865000,14273937000,14272996000,14272071000,14271129000,14270191000,14269259000,14268328000,14267386000,14266457000,14265514000,14264590000,14263662000]},"latest":"14.29G"},
+
+  {"name":"cilium_process_network_transmit_bytes_total","gaugeOrCounter":{"samples":[6190527000,6189924000,6189320700,6188718600,6188118500,6187508700,6186904000,6186305500,6185695000,6185095000,6184483300,6183883300,6183284700,6182677500,6182079500,6181470000,6180863000,6180260400,6179656700,6179047400,6178448000,6177837600,6177239000,6176637000]},"latest":"6.191G"},
+
+  {"name":"cilium_process_open_fds","gaugeOrCounter":{"samples":[111,112,112,112,112,112,111,112,111,111,111,112,112,112,112,112,112,112,111,112,111,112,112,112]},"latest":"111"},
+
+  {"name":"cilium_process_resident_memory_bytes","gaugeOrCounter":{"samples":[185970690,188252160,185557000,185557000,185557000,185557000,186204160,188084220,185651200,185851900,185851900,185851900,185851900,188117000,185421820,185421820,185421820,185421820,185376770,188162050,185155580,185614340,185614340,185614340]},"latest":"186M"},
+
+  {"name":"cilium_process_start_time_seconds","gaugeOrCounter":{"samples":[1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600,1733672600]},"latest":"1.734G"},
+
+  {"name":"cilium_process_virtual_memory_bytes","gaugeOrCounter":{"samples":[1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100,1471279100]},"latest":"1.471G"},
+
+  {"name":"cilium_process_virtual_memory_max_bytes","gaugeOrCounter":{"samples":[18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000,18446744000000000000]},"latest":"1.845e+07T"},
+
+  {"name":"cilium_proxy_datapath_update_timeout_total","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_reconciler_count","labels":"module_id=agent.controlplane.loadbalancer-experimental.reconciler","gaugeOrCounter":{"samples":[1899,1899,1885,1884,1882,1881,1880,1880,1866,1865,1863,1862,1861,1861,1847,1846,1844,1843,1842,1842,1828,1827,1825,1824]},"latest":"1.899k"},
+
+  {"name":"cilium_reconciler_count","labels":"module_id=agent.datapath.sysctl","gaugeOrCounter":{"samples":[5490,5488,5470,5468,5450,5448,5430,5428,5410,5408,5390,5388,5370,5368,5350,5348,5330,5328,5310,5308,5290,5288,5270,5268]},"latest":"5.49k"},
+
+  {"name":"cilium_reconciler_duration_seconds","labels":"module_id=agent.controlplane.loadbalancer-experimental.reconciler op=delete","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_reconciler_duration_seconds","labels":"module_id=agent.controlplane.loadbalancer-experimental.reconciler op=update","histogram":{"p50":[0,0.00025,0.00025,0.00025,0.00025,0.00025,0,0.00025,0.00025,0.00025,0.00025,0.00025,0,0.00025,0.00025,0.00025,0.00025,0.00025,0,0.00025,0.00025,0.00025,0.00025,0.00025],"p90":[0,0.00045,0.00045,0.00045,0.00045,0.00045,0,0.00045,0.00045,0.00045,0.00045,0.00045,0,0.00045,0.00045,0.00045,0.00045,0.00045,0,0.00045,0.00045,0.00045,0.00045,0.00045],"p99":[0,0.000495,0.000495,0.000495,0.000495,0.000495,0,0.000495,0.000495,0.000495,0.000495,0.000495,0,0.000495,0.000495,0.000495,0.000495,0.000495,0,0.000495,0.000495,0.000495,0.000495,0.000495]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_reconciler_duration_seconds","labels":"module_id=agent.datapath.sysctl op=update","histogram":{"p50":[0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025],"p90":[0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045],"p99":[0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495]},"latest":"250µs / 450µs / 495µs"},
+
+  {"name":"cilium_reconciler_errors_current","labels":"module_id=agent.controlplane.ciliumenvoyconfig.experimental","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_reconciler_errors_current","labels":"module_id=agent.controlplane.dynamic-lifecycle-manager","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_reconciler_errors_current","labels":"module_id=agent.controlplane.loadbalancer-experimental.reconciler","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_reconciler_errors_current","labels":"module_id=agent.datapath.iptables.ipset","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_reconciler_errors_current","labels":"module_id=agent.datapath.sysctl","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_reconciler_prune_count","labels":"module_id=agent.controlplane.dynamic-lifecycle-manager","gaugeOrCounter":{"samples":[46,46,46,46,46,46,46,46,45,45,45,45,45,45,45,45,45,45,45,45,44,44,44,44]},"latest":"46"},
+
+  {"name":"cilium_reconciler_prune_count","labels":"module_id=agent.controlplane.loadbalancer-experimental.reconciler","gaugeOrCounter":{"samples":[92,92,91,91,91,91,91,91,90,90,90,90,90,90,89,89,89,89,89,89,88,88,88,88]},"latest":"92"},
+
+  {"name":"cilium_reconciler_prune_count","labels":"module_id=agent.datapath.iptables.ipset","gaugeOrCounter":{"samples":[46,46,46,46,46,46,46,46,46,45,45,45,45,45,45,45,45,45,45,45,45,44,44,44]},"latest":"46"},
+
+  {"name":"cilium_reconciler_prune_duration_seconds","labels":"module_id=agent.controlplane.dynamic-lifecycle-manager","histogram":{"p50":[0,0,0,0,0,0,0,0.0025,0,0,0,0,0,0,0,0,0,0,0,0.0025,0,0,0,0],"p90":[0,0,0,0,0,0,0,0.0045,0,0,0,0,0,0,0,0,0,0,0,0.0045,0,0,0,0],"p99":[0,0,0,0,0,0,0,0.00495,0,0,0,0,0,0,0,0,0,0,0,0.00495,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_reconciler_prune_duration_seconds","labels":"module_id=agent.controlplane.loadbalancer-experimental.reconciler","histogram":{"p50":[0,0.0075,0,0,0,0,0,0.0075,0,0,0,0,0,0.0025,0,0,0,0,0,0.0025,0,0,0,0],"p90":[0,0.0095,0,0,0,0,0,0.0095,0,0,0,0,0,0.0045,0,0,0,0,0,0.0045,0,0,0,0],"p99":[0,0.00995,0,0,0,0,0,0.00995,0,0,0,0,0,0.00495,0,0,0,0,0,0.00495,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_reconciler_prune_duration_seconds","labels":"module_id=agent.datapath.iptables.ipset","histogram":{"p50":[0,0,0,0,0,0,0,0,0.0025,0,0,0,0,0,0,0,0,0,0,0,0.0025,0,0,0],"p90":[0,0,0,0,0,0,0,0,0.0045,0,0,0,0,0,0,0,0,0,0,0,0.0045,0,0,0],"p99":[0,0,0,0,0,0,0,0,0.00495,0,0,0,0,0,0,0,0,0,0,0,0.00495,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_service_implementation_delay","labels":"action=service-deleted","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0 / 0 / 0"},
+
+  {"name":"cilium_service_implementation_delay","labels":"action=service-updated","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0 / 0 / 0"},
+
+  {"name":"cilium_services_events_total","labels":"action=add","gaugeOrCounter":{"samples":[25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25]},"latest":"25"},
+
+  {"name":"cilium_services_events_total","labels":"action=delete","gaugeOrCounter":{"samples":[8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8]},"latest":"8"},
+
+  {"name":"cilium_services_events_total","labels":"action=update","gaugeOrCounter":{"samples":[33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33,33]},"latest":"33"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=DB table=devices","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=DB table=frontends","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=devices-controller table=devices","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=devices-controller table=neighbors","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=devices-controller table=routes","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=dynamic-lifecycle-manager table=dynamic-features","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=experimental table=ciliumenvoyconfigs","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=experimental table=frontends","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=health table=health","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=ipset table=ipsets","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=l2-responder table=l2-announce","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=mtu table=mtu","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=nat-stats table=nat-stats","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=node-address table=devices","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=node-address table=node-addresses","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=reconciler table=frontends","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=statedb table=health","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=sysctl table=sysctl","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=tables table=backends","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=tables table=frontends","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_contention_seconds","labels":"handle=tables table=services","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_delete_trackers","labels":"table=ciliumenvoyconfigs","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_statedb_table_delete_trackers","labels":"table=devices","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_statedb_table_delete_trackers","labels":"table=dynamic-features","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_statedb_table_delete_trackers","labels":"table=frontends","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_statedb_table_delete_trackers","labels":"table=health","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_delete_trackers","labels":"table=ipsets","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_statedb_table_delete_trackers","labels":"table=l2-announce","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_statedb_table_delete_trackers","labels":"table=sysctl","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=backends","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=bandwidth-edts","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=bandwidth-qdiscs","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=cilium-configs","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=ciliumenvoyconfigs","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=devices","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=dynamic-features","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=frontends","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=health","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=ipsets","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=l2-announce","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=mtu","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=nat-stats","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=neighbors","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=node-addresses","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=routes","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=services","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_cleaning_duration_seconds","labels":"table=sysctl","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=backends","gaugeOrCounter":{"samples":[56,56,56,56,56,56,56,56,56,56,56,56,56,56,56,56,56,56,56,56,56,56,56,56]},"latest":"56"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=bandwidth-edts","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=bandwidth-qdiscs","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=cilium-configs","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=ciliumenvoyconfigs","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=devices","gaugeOrCounter":{"samples":[21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21]},"latest":"21"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=dynamic-features","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=frontends","gaugeOrCounter":{"samples":[1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748,1748]},"latest":"1.748k"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=health","gaugeOrCounter":{"samples":[120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825,120825]},"latest":"120.8k"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=ipsets","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=l2-announce","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=mtu","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=nat-stats","gaugeOrCounter":{"samples":[83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751,83751]},"latest":"83.75k"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=neighbors","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=node-addresses","gaugeOrCounter":{"samples":[9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9]},"latest":"9"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=routes","gaugeOrCounter":{"samples":[72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72]},"latest":"72"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=services","gaugeOrCounter":{"samples":[26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26]},"latest":"26"},
+
+  {"name":"cilium_statedb_table_graveyard_low_watermark","labels":"table=sysctl","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=backends","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=bandwidth-edts","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=bandwidth-qdiscs","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=cilium-configs","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=ciliumenvoyconfigs","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=devices","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=dynamic-features","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=frontends","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=health","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=ipsets","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=l2-announce","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=mtu","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=nat-stats","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=neighbors","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=node-addresses","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=routes","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=services","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_graveyard_objects","labels":"table=sysctl","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=backends","gaugeOrCounter":{"samples":[25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25]},"latest":"25"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=bandwidth-edts","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=bandwidth-qdiscs","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=cilium-configs","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=ciliumenvoyconfigs","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=devices","gaugeOrCounter":{"samples":[10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]},"latest":"10"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=dynamic-features","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=frontends","gaugeOrCounter":{"samples":[19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19]},"latest":"19"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=health","gaugeOrCounter":{"samples":[75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75,75]},"latest":"75"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=ipsets","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=l2-announce","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=mtu","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=nat-stats","gaugeOrCounter":{"samples":[32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32]},"latest":"32"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=neighbors","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=node-addresses","gaugeOrCounter":{"samples":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},"latest":"5"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=routes","gaugeOrCounter":{"samples":[66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66]},"latest":"66"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=services","gaugeOrCounter":{"samples":[17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17,17]},"latest":"17"},
+
+  {"name":"cilium_statedb_table_objects","labels":"table=sysctl","gaugeOrCounter":{"samples":[20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20]},"latest":"20"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=backends","gaugeOrCounter":{"samples":[57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57]},"latest":"57"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=ciliumenvoyconfigs","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=devices","gaugeOrCounter":{"samples":[23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23]},"latest":"23"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=dynamic-features","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=frontends","gaugeOrCounter":{"samples":[3800,3800,3772,3770,3766,3764,3762,3762,3734,3732,3728,3726,3724,3724,3696,3694,3690,3688,3686,3686,3658,3656,3652,3650]},"latest":"3.8k"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=health","gaugeOrCounter":{"samples":[282420,281958,281394,280924,280417,279945,279440,278977,278410,277940,277432,276960,276452,275989,275424,274955,274445,273974,273468,273005,272438,271968,271457,270985]},"latest":"282.4k"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=ipsets","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=l2-announce","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=mtu","gaugeOrCounter":{"samples":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},"latest":"2"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=nat-stats","gaugeOrCounter":{"samples":[236672,236032,235392,234752,234112,233472,232832,232192,231552,230912,230272,229632,228992,228352,227712,227072,226432,225792,225152,224512,223872,223232,222592,221952]},"latest":"236.7k"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=neighbors","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=node-addresses","gaugeOrCounter":{"samples":[9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9]},"latest":"9"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=routes","gaugeOrCounter":{"samples":[72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72]},"latest":"72"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=services","gaugeOrCounter":{"samples":[27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27,27]},"latest":"27"},
+
+  {"name":"cilium_statedb_table_revision","labels":"table=sysctl","gaugeOrCounter":{"samples":[10980,10976,10940,10936,10900,10896,10860,10856,10820,10816,10780,10776,10740,10736,10700,10696,10660,10656,10620,10616,10580,10576,10540,10536]},"latest":"10.98k"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=DB","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=devices-controller","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=dynamic-lifecycle-manager","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=experimental","histogram":{"p50":[0,0.00025,0.00025,0.00025,0.00025,0.00025,0,0.00025,0.00025,0.00025,0.00025,0.00025,0,0.00025,0.00025,0.00025,0.00025,0.00025,0,0.00025,0.00025,0.00025,0.00025,0.00025],"p90":[0,0.00045,0.00045,0.00045,0.00045,0.00045,0,0.00045,0.00045,0.00045,0.00045,0.00045,0,0.00045,0.00045,0.00045,0.00045,0.00045,0,0.00045,0.00045,0.00045,0.00045,0.00045],"p99":[0,0.000495,0.000495,0.000495,0.000495,0.000495,0,0.000495,0.000495,0.000495,0.000495,0.000495,0,0.000495,0.000495,0.000495,0.000495,0.000495,0,0.000495,0.000495,0.000495,0.000495,0.000495]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=health","histogram":{"p50":[0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025053418,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025],"p90":[0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045096152,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045],"p99":[0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.0004960577,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495]},"latest":"250µs / 450µs / 495µs"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=ipset","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=l2-responder","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=mtu","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=nat-stats","histogram":{"p50":[0.00041666668,0.00035714285,0.0005,0.0003125,0.0005,0.0005833333,0.00041666668,0.0005,0.00041666668,0.0005,0.00064285717,0.00041666668,0.00035714285,0.00041666668,0.0005833333,0.0005833333,0.0005833333,0.00035714285,0.0005,0.0005833333,0.0006875,0.0005,0.00041666668,0.00035714285],"p90":[0.000875,0.00083333335,0.0009,0.00075,0.0009,0.00091666664,0.000875,0.0009,0.000875,0.0009,0.00092857145,0.000875,0.00083333335,0.000875,0.00091666664,0.00091666664,0.00091666664,0.00083333335,0.0009,0.00091666664,0.0009375,0.0009,0.000875,0.00083333335],"p99":[0.0009875,0.0009833333,0.00099,0.000975,0.00099,0.0009916667,0.0009875,0.00099,0.0009875,0.00099,0.0009928572,0.0009875,0.0009833333,0.0009875,0.0009916667,0.0009916667,0.0009916667,0.0009833333,0.00099,0.0009916667,0.00099375,0.00099,0.0009875,0.0009833333]},"latest":"416.7µs / 875µs / 987.5µs"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=node-address","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=reconciler","histogram":{"p50":[0,0.00025,0.00025,0.00025,0.00025,0.00025,0,0.00025,0.00025,0.00025,0.00025,0.00025,0,0.00025,0.00025,0.00025,0.00025,0.00025,0,0.00025,0.00025,0.00025,0.00025,0.00025],"p90":[0,0.00045,0.00045,0.00045,0.00045,0.00045,0,0.00045,0.00045,0.00045,0.00045,0.00045,0,0.00045,0.00045,0.00045,0.00045,0.00045,0,0.00045,0.00045,0.00045,0.00045,0.00045],"p99":[0,0.000495,0.000495,0.000495,0.000495,0.000495,0,0.000495,0.000495,0.000495,0.000495,0.000495,0,0.000495,0.000495,0.000495,0.000495,0.000495,0,0.000495,0.000495,0.000495,0.000495,0.000495]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=statedb","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=sysctl","histogram":{"p50":[0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025,0.00025],"p90":[0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045,0.00045],"p99":[0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495,0.000495]},"latest":"250µs / 450µs / 495µs"},
+
+  {"name":"cilium_statedb_write_txn_duration_seconds","labels":"handle=tables","histogram":{"p50":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p90":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"p99":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0s / 0s / 0s"},
+
+  {"name":"cilium_subprocess_start_total","labels":"subsystem=cilium-health","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"cilium_version","labels":"arch=linux/arm64 revision=d1ec98c0 version=1.17.0-dev","gaugeOrCounter":{"samples":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},"latest":"0"},
+
+  {"name":"go_gc_duration_seconds","gaugeOrCounter":{"samples":[0.00019748497,0.0001974016,0.00019742608,0.00019746678,0.00019756911,0.00019749129,0.00019752847,0.00019760414,0.00019753812,0.00019749573,0.00019753492,0.00019754453,0.00019748829,0.00019756926,0.00019766908,0.00019769711,0.00019767982,0.00019779257,0.00019779567,0.00019785657,0.0001979505,0.00019789647,0.00019800533,0.00019798471]},"latest":"197.5µ"},
+
+  {"name":"go_gc_gogc_percent","gaugeOrCounter":{"samples":[100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100]},"latest":"100"},
+
+  {"name":"go_gc_gomemlimit_bytes","gaugeOrCounter":{"samples":[16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000,16463704000]},"latest":"16.46G"},
+
+  {"name":"go_goroutines","gaugeOrCounter":{"samples":[437,439,439,439,439,439,437,439,437,438,437,439,439,439,439,439,439,439,437,439,437,439,439,439]},"latest":"437"},
+
+  {"name":"go_info","labels":"version=go1.23.4","gaugeOrCounter":{"samples":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},"latest":"1"},
+
+  {"name":"go_memstats_alloc_bytes","gaugeOrCounter":{"samples":[47093230,58722810,47151464,58099080,46863250,58769800,47268736,58746184,46729350,58488330,47364960,58644056,47097690,58161950,47421120,58527296,46926370,59346680,47519216,58990760,46737600,58650816,46960490,58723050]},"latest":"47.09M"},
+
+  {"name":"go_memstats_alloc_bytes_total","gaugeOrCounter":{"samples":[39388426000,39328207000,39258853000,39198240000,39137760000,39077523000,39016910000,38956495000,38886842000,38826470000,38766140000,38705582000,38644590000,38583820000,38515340000,38454590000,38393643000,38333702000,38272655000,38212400000,38142816000,38082662000,38021870000,37961570000]},"latest":"39.39G"},
+
+  {"name":"go_memstats_buck_hash_sys_bytes","gaugeOrCounter":{"samples":[2569848,2568928,2567568,2567280,2566448,2565992,2565992,2565776,2563784,2563480,2562768,2561728,2561472,2561208,2561208,2560632,2560176,2559944,2559008,2557920,2556448,2556216,2555384,2554864]},"latest":"2.57M"},
+
+  {"name":"go_memstats_frees_total","gaugeOrCounter":{"samples":[378999900,378372450,377897400,377275360,376833280,376203900,375764830,375137100,374662700,374037060,373595330,372970560,372528220,371904130,371432350,370807800,370366000,369741120,369298980,368675840,368205060,367582500,367144060,366517700]},"latest":"379M"},
+
+  {"name":"go_memstats_gc_sys_bytes","gaugeOrCounter":{"samples":[4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968,4607968]},"latest":"4.608M"},
+
+  {"name":"go_memstats_heap_alloc_bytes","gaugeOrCounter":{"samples":[47093230,58722810,47151464,58099080,46863250,58769800,47268736,58746184,46729350,58488330,47364960,58644056,47097690,58161950,47421120,58527296,46926370,59346680,47519216,58990760,46737600,58650816,46960490,58723050]},"latest":"47.09M"},
+
+  {"name":"go_memstats_heap_idle_bytes","gaugeOrCounter":{"samples":[35471360,28311552,35438590,28934144,35602430,28598272,35921920,28778496,36315136,28803072,35831810,28639232,35741696,28901376,35676160,28639232,35897344,28106752,35430400,28450816,36093950,28712960,35807230,28770304]},"latest":"35.47M"},
+
+  {"name":"go_memstats_heap_inuse_bytes","gaugeOrCounter":{"samples":[64176130,71172100,64241664,70713340,64110590,71114750,63954944,70967300,63561730,70942720,64077824,71073790,64135170,70877180,64200704,71073790,63848450,71475200,64282624,71196670,63717376,71000060,63971330,70942720]},"latest":"64.18M"},
+
+  {"name":"go_memstats_heap_objects","gaugeOrCounter":{"samples":[360078,460822,358735,452142,355161,458215,364330,461115,360146,458191,361100,460209,359285,455055,361329,456748,360089,463387,364775,463860,358585,455894,360570,459296]},"latest":"360.1k"},
+
+  {"name":"go_memstats_heap_released_bytes","gaugeOrCounter":{"samples":[18923520,16171008,19169280,19169280,19169280,19398656,18481152,16285696,19062784,18669568,18669568,18669568,18669568,16146432,19087360,19087360,19087360,19087360,19316736,16334848,19349504,18825216,18825216,18825216]},"latest":"18.92M"},
+
+  {"name":"go_memstats_heap_sys_bytes","gaugeOrCounter":{"samples":[99647490,99483650,99680260,99647490,99713020,99713020,99876860,99745790,99876860,99745790,99909630,99713020,99876860,99778560,99876860,99713020,99745790,99581950,99713020,99647490,99811330,99713020,99778560,99713020]},"latest":"99.65M"},
+
+  {"name":"go_memstats_last_gc_time_seconds","gaugeOrCounter":{"samples":[1733836900,1733836700,1733836400,1733836000,1733835800,1733835400,1733835100,1733834900,1733834600,1733834200,1733834000,1733833600,1733833300,1733833100,1733832800,1733832400,1733832200,1733831800,1733831600,1733831200,1733831000,1733830700,1733830400,1733830000]},"latest":"1.734G"},
+
+  {"name":"go_memstats_mallocs_total","gaugeOrCounter":{"samples":[379359970,378833280,378256130,377727500,377188450,376662140,376129150,375598200,375022850,374495260,373956400,373430750,372887520,372359170,371793660,371264540,370726100,370204500,369663740,369139700,368563650,368038400,367504640,366977000]},"latest":"379.4M"},
+
+  {"name":"go_memstats_mcache_inuse_bytes","gaugeOrCounter":{"samples":[9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600,9600]},"latest":"9.6k"},
+
+  {"name":"go_memstats_mcache_sys_bytes","gaugeOrCounter":{"samples":[15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600,15600]},"latest":"15.6k"},
+
+  {"name":"go_memstats_mspan_inuse_bytes","gaugeOrCounter":{"samples":[1022400,1048480,1023040,1044000,1030560,1041760,1016640,1049440,1020960,1056000,1025760,1051360,1024160,1047040,1019360,1054880,1019680,1047680,1003040,1057920,1008480,1052960,1027840,1063360]},"latest":"1.022M"},
+
+  {"name":"go_memstats_mspan_sys_bytes","gaugeOrCounter":{"samples":[1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920,1321920]},"latest":"1.322M"},
+
+  {"name":"go_memstats_next_gc_bytes","gaugeOrCounter":{"samples":[87595000,87631430,88077190,87511400,87702150,87402550,87669560,87612970,87609450,87690136,87631050,87695350,87610230,87577450,87573480,87624136,87487624,87501656,87446630,87816170,87464024,87607030,87479544,87685784]},"latest":"87.59M"},
+
+  {"name":"go_memstats_other_sys_bytes","gaugeOrCounter":{"samples":[1855283,1856203,1857563,1857851,1858683,1859139,1859139,1859355,1861347,1861651,1862363,1863403,1863659,1863923,1863923,1864499,1864955,1865187,1866123,1867211,1868683,1868915,1869747,1870267]},"latest":"1.855M"},
+
+  {"name":"go_memstats_stack_inuse_bytes","gaugeOrCounter":{"samples":[5210112,5373952,5177344,5210112,5144576,5144576,4980736,5111808,4980736,5111808,4947968,5144576,4980736,5079040,4980736,5144576,5111808,5275648,5144576,5210112,5046272,5144576,5079040,5144576]},"latest":"5.21M"},
+
+  {"name":"go_memstats_stack_sys_bytes","gaugeOrCounter":{"samples":[5210112,5373952,5177344,5210112,5144576,5144576,4980736,5111808,4980736,5111808,4947968,5144576,4980736,5079040,4980736,5144576,5111808,5275648,5144576,5210112,5046272,5144576,5079040,5144576]},"latest":"5.21M"},
+
+  {"name":"go_memstats_sys_bytes","gaugeOrCounter":{"samples":[115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216,115228216]},"latest":"115.2M"},
+
+  {"name":"go_sched_gomaxprocs_threads","gaugeOrCounter":{"samples":[8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8]},"latest":"8"},
+
+  {"name":"go_sched_latencies_seconds","histogram":{"p50":[0.000004205859,0.000003606252,0.0000042004917,0.0000037435284,0.000004163495,0.0000035336227,0.00000370197,0.000003108431,0.0000035017565,0.0000031472036,0.0000034731831,0.0000032679536,0.0000036716835,0.0000031333714,0.0000035087737,0.0000032391645,0.0000037757436,0.0000035468306,0.0000039004653,0.0000035407231,0.000004009342,0.0000034734865,0.0000040479345,0.0000037542584],"p90":[0.000053393407,0.000050675197,0.000052713014,0.00005035096,0.000052173058,0.000044470948,0.000037385227,0.000027259654,0.000022911465,0.00001883367,0.000018570308,0.000028566385,0.000034239696,0.000025521183,0.000019855377,0.000021073194,0.000038112965,0.00004143615,0.00004357421,0.00004563171,0.000046243542,0.000035697863,0.000047488036,0.000046198886],"p99":[0.000080589845,0.00008077541,0.0000801501,0.000080052036,0.00008021719,0.0000795498,0.00007912012,0.00007982737,0.00007840514,0.00007838988,0.00007849002,0.00007892184,0.00007933347,0.000079994454,0.00007837861,0.00007829618,0.000079557445,0.00007987908,0.000079955724,0.000080800964,0.00007989448,0.000079513164,0.00008007341,0.00007975342]},"latest":"4.206µs / 53.39µs / 80.59µs"},
+
+  {"name":"go_threads","gaugeOrCounter":{"samples":[18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18]},"latest":"18"},
+
+];
+
+const timespanMinutes =  300  / 60;
+let timeline = [];
+for (let i = 0; i <  24 ; i++) {
+    timeline.push(
+        "-" + ( 24 -i)*timespanMinutes + "min",
+    ); 
+}
+
+function plot(idx) {
+    const sample = samples[idx];
+    var data = [], layout = {};
+    if (sample['histogram']) {
+        data = [
+            { name: 'p50', x: timeline, y: [...sample['histogram'].p50].reverse(), type: 'scatter', mode: 'lines', line: { color:'#97e3c2' }},
+            { name: 'p90', x: timeline, y: [...sample['histogram'].p90].reverse(), type: 'scatter', mode: 'lines', line: { color:'#aad2ec' }},
+            { name: 'p99', x: timeline, y: [...sample['histogram'].p99].reverse(), type: 'scatter', mode: 'lines', line: { color:'#f69c9e' }},
+        ];
+    } else {
+        var ys = [...sample['gaugeOrCounter'].samples].reverse();
+        var tl = [...timeline];
+        const rateChecked = document.getElementById(idx + "-rate").checked;
+        if (rateChecked) {
+            var prev = ys[0];
+            for (let i = 1; i < ys.length; i++) {
+                const rate = (ys[i] - prev) /  300 ;
+                prev = ys[i];
+                ys[i] = rate;
+            }
+            ys.shift(); tl.shift();
+        }
+        data = [{ x: tl, y: ys, type: 'bar', marker: { color:'#aad2ec' }}];
+        layout = {xaxis: { tickangle: -45}, barmode: 'group'}
+    }
+    Plotly.newPlot(idx + '-plot', data, layout, {staticPlot: true});
+}
+
+function togglePlot(row, idx) {
+    const nextRow = row.nextElementSibling;
+    if (nextRow.classList.contains('hidden')) {
+        nextRow.classList.remove('hidden');
+        row.classList.add('selected');
+        nextRow.classList.add('selected');
+        plot(idx);
+    } else {
+        nextRow.classList.add('hidden');
+        row.classList.remove('selected');
+        nextRow.classList.remove('selected');
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+   const metricsTable = document.getElementById("metrics-table").getElementsByTagName("tbody")[0];
+   for (let i = 0; i < samples.length; ++i) {
+     const sample = samples[i];
+     if (!sample) continue;
+     const row = document.createElement("tr");
+     row.className = "clickable"; 
+     row.setAttribute("onclick", "togglePlot(this, " + i + ")");
+     var cell = document.createElement("td");
+     cell.textContent = sample.name;
+     row.appendChild(cell);
+     cell = document.createElement("td");
+     cell.textContent = sample.labels;
+     row.appendChild(cell);
+     cell = document.createElement("td");
+     cell.textContent = sample.latest;
+     cell.style = "width: 15em";
+     row.appendChild(cell);
+     metricsTable.appendChild(row);
+     const plotRow = document.createElement("tr");
+     plotRow.className = "hidden";
+     cell = document.createElement("td");
+     cell.colSpan = 3;
+     if (sample['gaugeOrCounter']) {
+         const rateDiv = document.createElement("div");
+         rateDiv.className = "ratebox";
+         const rateBox = document.createElement("input");
+         rateBox.id = i + "-rate";
+         rateBox.setAttribute("onclick", "plot(" + i + ")");
+         rateBox.type = "checkbox";
+         const rateLabel = document.createElement("label");
+         rateLabel.textContent = "rate/s"
+         rateLabel.htmlFor = rateBox.id;
+         rateDiv.appendChild(rateBox);
+         rateDiv.appendChild(rateLabel);
+         cell.appendChild(rateDiv);
+     }
+     const plotDiv = document.createElement("div");
+     plotDiv.id = i + '-plot';
+     cell.appendChild(plotDiv);
+     plotRow.appendChild(cell);
+     metricsTable.appendChild(plotRow);
+   }
+});
+
+document.getElementById('search-input').addEventListener('keyup', function() {
+   const input = document.getElementById("search-input");
+   const filter = input.value.toUpperCase();
+   const table = document.getElementById("metrics-table");
+   const tr = table.getElementsByTagName("tr");
+   for (i = 1; i < tr.length; i+=2) {
+     const td = tr[i].getElementsByTagName("td");
+     const txtValue = td[0].textContent || td[0].innerText;
+     if (txtValue.toUpperCase().indexOf(filter) < 0) {
+       tr[i].style.display = "none";
+     } else {
+       tr[i].style.display = "";
+     }
+     tr[i+1].className = "hidden";  
+   }
+});
+
+</script>
+
+</body>
+</html>
+
+
