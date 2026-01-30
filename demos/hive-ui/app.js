@@ -112,7 +112,7 @@ function animate() {
 }
 
 function fetchGraph() {
-  return fetch("/graph.json").then((res) => res.json());
+  return fetch("./graph.json").then((res) => res.json());
 }
 
 function buildModuleDeps() {
