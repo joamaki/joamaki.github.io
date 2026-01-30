@@ -10,6 +10,7 @@ const state = {
   moduleDepObjects: new Map(),
   expandedModules: new Set(),
   selectedId: null,
+  hoveredId: null,
   moduleOrder: [],
   objectIndex: [],
   objectRefIndex: new Map(),
@@ -783,6 +784,14 @@ function setSelected(id) {
   renderDetails();
 }
 
+function setHovered(id) {
+  if (state.hoveredId === id) {
+    return;
+  }
+  state.hoveredId = id;
+  applyHighlight();
+}
+
 function applyHighlight() {
   const selected = state.selectedId;
   const connected = new Set();
@@ -816,7 +825,18 @@ function applyHighlight() {
 
   state.edgeMeshes.forEach((line) => {
     const { from, to } = line.userData;
-    if (selected && (from === selected || to === selected)) {
+    const edgeFocus = selected || state.hoveredId;
+    if (line.userData && line.userData.kind === "dep") {
+      if (!edgeFocus) {
+        line.visible = false;
+        return;
+      }
+      line.visible = from === edgeFocus || to === edgeFocus;
+      if (!line.visible) {
+        return;
+      }
+    }
+    if (edgeFocus && (from === edgeFocus || to === edgeFocus)) {
       line.material.opacity = 0.9;
     } else {
       line.material.opacity = 0.25;
@@ -1257,9 +1277,11 @@ function pick(event, select) {
     if (select) {
       setSelected(id);
     }
+    setHovered(id);
     showTooltip(mesh.userData, event.clientX, event.clientY);
     return;
   }
+  setHovered(null);
   const edgeIntersects = raycaster.intersectObjects(state.edgeMeshes, false);
   if (edgeIntersects.length > 0) {
     const edge = edgeIntersects[0].object;
@@ -1417,7 +1439,10 @@ viewport.addEventListener(
   { passive: false }
 );
 
-viewport.addEventListener("pointerleave", hideTooltip);
+viewport.addEventListener("pointerleave", () => {
+  hideTooltip();
+  setHovered(null);
+});
 
 viewport.addEventListener("dblclick", (event) => {
   updatePointer(event);
